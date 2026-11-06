@@ -1,0 +1,88 @@
+@model IEnumerable<WatchStore.Web.Models.UserListItemViewModel>
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+}
+
+<h2 class="mb-4">Quản lý tài khoản</h2>
+
+@* TempData mang thông báo lỗi từ POST sang qua một lần redirect *@
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Tên đăng nhập</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Số công việc</th>
+            <th>Ngày tạo</th>
+            <th style="width: 280px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @item.Username
+                    @if (item.IsCurrentUser)
+                    {
+                        <span class="badge bg-info text-dark">Bạn</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Role == "Admin")
+                    {
+                        <span class="badge bg-danger">Admin</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">User</span>
+                    }
+                </td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="text-success">Đang hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Đã khóa</span>
+                    }
+                </td>
+                <td>@item.TaskCount</td>
+                <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                <td>
+                    @* Dòng của chính mình: không hiện nút nào.
+                       Chặn thật nằm ở UserService, đây chỉ là giao diện. *@
+                    @if (!item.IsCurrentUser)
+                    {
+                        @* Mỗi nút một form riêng, vì tất cả đều là POST *@
+                        <form asp-action="ChangeRole" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                @(item.Role == "Admin" ? "Hạ quyền" : "Nâng quyền")
+                            </button>
+                        </form>
+
+                        <form asp-action="ToggleActive" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                @(item.IsActive ? "Khóa" : "Mở khóa")
+                            </button>
+                        </form>
+
+                        <form asp-action="Delete" method="post" class="d-inline"
+                              onsubmit="return confirm('Xóa tài khoản này? Toàn bộ công việc của họ cũng sẽ bị xóa.');">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,28 @@
+@model WatchStore.Web.Entities.TaskItem
+@{
+    ViewData["Title"] = "Xóa công việc";
+}
+
+<h2 class="mb-4">Xóa công việc</h2>
+
+<div class="alert alert-danger">
+    Bạn có chắc muốn xóa công việc này? Thao tác không thể hoàn tác.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Tiêu đề</dt>
+    <dd class="col-sm-9">@Model.Title</dd>
+
+    <dt class="col-sm-3">Mô tả</dt>
+    <dd class="col-sm-9">@(Model.Description ?? "—")</dd>
+
+    <dt class="col-sm-3">Hạn</dt>
+    <dd class="col-sm-9">@(Model.DueDate?.ToString("dd/MM/yyyy") ?? "—")</dd>
+</dl>
+
+@* POST, không phải link GET — xóa là thao tác thay đổi dữ liệu *@
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>

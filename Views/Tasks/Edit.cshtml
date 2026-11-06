@@ -1,0 +1,27 @@
+@model WatchStore.Web.Models.TaskFormViewModel
+@{
+    ViewData["Title"] = "Sửa công việc";
+}
+
+<h2 class="mb-4">Sửa công việc</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            @* Id đi kèm để controller biết sửa task nào.
+               Hidden KHÔNG phải bảo mật — controller vẫn phải kiểm tra
+               chủ sở hữu bằng GetOwnedAsync. *@
+            <input type="hidden" asp-for="Id" />
+
+            <partial name="_TaskForm" model="Model" />
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-link">Hủy</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
