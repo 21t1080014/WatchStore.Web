@@ -1,6 +1,3 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using WatchStore.Web.Models;
 using WatchStore.Web.Services;
@@ -57,28 +54,18 @@ public class AccountController : Controller
         if (!ModelState.IsValid)
             return View(vm);
 
-        var user = await _authService.ValidateLoginAsync(vm.Username, vm.Password);
-        if (user is null)
+        // [SỬA - chuyển sang ASP.NET Core Identity]
+        // Đã XÓA toàn bộ đoạn dựng claim thủ công:
+        //   new Claim(ClaimTypes.NameIdentifier, user.Id...) / Name / Role
+        //   new ClaimsIdentity(...) + HttpContext.SignInAsync(...)
+        // Lý do: SignInManager tự sinh đúng 3 claim đó từ user và role trong DB.
+        // Nhờ vậy TasksController, UsersController và _Layout.cshtml không phải sửa gì.
+        var error = await _authService.LoginAsync(vm.Username, vm.Password);
+        if (error is not null)
         {
-            // Báo chung một câu, không nói rõ sai tên hay sai mật khẩu,
-            // để kẻ tấn công không dò được username nào có thật.
-            ModelState.AddModelError(string.Empty,
-                "Tên đăng nhập hoặc mật khẩu không đúng.");
+            ModelState.AddModelError(string.Empty, error);
             return View(vm);
         }
-
-        // Đóng gói danh tính để ghi vào cookie.
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username),
-            new(ClaimTypes.Role, user.Role)
-        };
-
-        var identity = new ClaimsIdentity(
-            claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-        await HttpContext.SignInAsync(new ClaimsPrincipal(identity));
 
         // Chỉ nhận returnUrl nội bộ, chặn chuyển hướng sang web ngoài.
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -91,7 +78,9 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync();
+        // [SỬA] HttpContext.SignOutAsync() -> _authService.LogoutAsync()
+        // vì Identity dùng 3 cookie scheme, phải xóa cả ba.
+        await _authService.LogoutAsync();
         return RedirectToAction("Index", "Home");
     }
 }

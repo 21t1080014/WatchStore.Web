@@ -6,7 +6,6 @@ using WatchStore.Web.Services;
 
 namespace WatchStore.Web.Controllers;
 
-// Chỉ Admin vào được. Ẩn menu KHÔNG phải bảo mật — dòng này mới là.
 [Authorize(Roles = "Admin")]
 public class UsersController : Controller
 {
@@ -26,11 +25,15 @@ public class UsersController : Controller
         var currentId = CurrentUserId;
         var rows = await _userService.GetAllAsync();
 
+        // [SỬA - chuyển sang ASP.NET Core Identity]
+        //   r.User.Username -> r.User.UserName  (property của IdentityUser, kiểu string?)
+        //   r.User.Role     -> r.Role           (role lấy từ join trong repository,
+        //                                        không còn là cột trên bảng Users)
         var vm = rows.Select(r => new UserListItemViewModel
         {
             Id = r.User.Id,
-            Username = r.User.Username,
-            Role = r.User.Role,
+            Username = r.User.UserName ?? string.Empty,
+            Role = r.Role,
             IsActive = r.User.IsActive,
             CreatedAt = r.User.CreatedAt,
             TaskCount = r.TaskCount,

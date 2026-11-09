@@ -1,31 +1,28 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using WatchStore.Web.Entities;
 
 namespace WatchStore.Web.Data;
 
-// Tạo tài khoản admin đầu tiên nếu DB chưa có admin nào.
-// Chạy một lần lúc app khởi động.
 public static class DbSeeder
 {
-    public static async Task SeedAdminAsync(AppDbContext context)
+    public static async Task SeedAsync(UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
     {
-        // Đã có admin rồi thì không làm gì. Tránh tạo trùng mỗi lần chạy app.
-        if (await context.Users.AnyAsync(u => u.Role == "Admin"))
+        foreach (var roleName in new[] { "Admin", "User" })
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+                await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+        }
+        if (await userManager.FindByNameAsync("admin") is not null)
             return;
 
         var admin = new User
         {
-            Username = "admin",
-            Role = "Admin",
+            UserName = "admin",
             IsActive = true
         };
+        var result = await userManager.CreateAsync(admin, "Admin@123");
 
-        // Dùng chung thuật toán hash với AuthService để đăng nhập khớp.
-        admin.PasswordHash = new PasswordHasher<User>()
-            .HashPassword(admin, "Admin@123");
-
-        context.Users.Add(admin);
-        await context.SaveChangesAsync();
+        if (result.Succeeded)
+            await userManager.AddToRoleAsync(admin, "Admin");
     }
 }
