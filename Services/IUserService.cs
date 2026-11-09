@@ -4,7 +4,8 @@ namespace WatchStore.Web.Services;
 
 public interface IUserService
 {
-    Task<IEnumerable<(User User, int TaskCount)>> GetAllAsync();
+    // [SỬA] Thêm Role vào tuple — xem ghi chú ở IUserRepository.
+    Task<IEnumerable<(User User, string Role, int TaskCount)>> GetAllAsync();
 
     // Cả ba hàm đều nhận currentUserId để kiểm tra ràng buộc an toàn.
     // Trả null nếu thành công, hoặc chuỗi mô tả lỗi.
